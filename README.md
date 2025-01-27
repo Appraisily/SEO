@@ -1,7 +1,11 @@
 # SEO Content Enhancement Service
 
 ## Overview
-This service automatically enhances WordPress content for SEO using OpenAI's GPT model. It processes content from a Google Sheets document containing post IDs and keywords, fetches the corresponding WordPress posts, enhances their content using OpenAI, and updates the posts with the optimized content.
+This service automatically enhances WordPress content for SEO using OpenAI's GPT model. It processes content from a Google Sheets document containing post IDs and keywords, fetches the corresponding WordPress posts, enhances their content using OpenAI, and updates the posts with the optimized content. The service is deployed at:
+
+```
+https://seo-856401495068.us-central1.run.app
+```
 
 ## Architecture
 
@@ -48,11 +52,13 @@ The following runtime environment variables must be configured in Cloud Run:
 ### Required Secrets
 The following secrets must be configured in Google Secret Manager within your project:
 
-- `WORDPRESS_API_URL`: WordPress REST API endpoint
-- `wp_username`: WordPress username
-- `wp_app_password`: WordPress application password
-- `OPEN_AI_API_SEO`: OpenAI API key
-- `SHEETS_ID_SEO`: Google Sheets document ID
+| Secret Name | Description |
+|-------------|-------------|
+| `WORDPRESS_API_URL` | WordPress REST API endpoint |
+| `wp_username` | WordPress username |
+| `wp_app_password` | WordPress application password |
+| `OPEN_AI_API_SEO` | OpenAI API key |
+| `SHEETS_ID_SEO` | Google Sheets document ID |
 
 ## API Endpoints
 
@@ -67,7 +73,12 @@ Triggers the content enhancement process:
 ### GET /health
 Health check endpoint that returns:
 - Service status
-- Google Sheets connection status
+- Connection status for all services (Sheets, WordPress, OpenAI, Storage)
+
+Example:
+```bash
+curl https://seo-856401495068.us-central1.run.app/health
+```
 
 ## Error Handling
 - Independent service initialization
@@ -121,6 +132,10 @@ Recommended deployment platform:
 - Service-specific log prefixes
 - Error details for debugging
 - Initialization status logging
+- Content storage in Google Cloud Storage bucket (`images_free_reports`)
+  - Original content backup
+  - Enhanced content versions
+  - Timestamped JSON files
 
 ## Limitations
 - OpenAI token limits

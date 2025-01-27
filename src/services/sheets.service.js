@@ -12,9 +12,9 @@ class SheetsService {
   async initialize() {
     try {
       const spreadsheetId = await getSecret(secretNames.sheetsId);
-      // Initialize with the spreadsheet ID and auth
+      // Use application default credentials which are automatically available in Cloud Run
       this.doc = new GoogleSpreadsheet(spreadsheetId, {
-        auth: 'use-default-credentials'  // Uses application default credentials
+        auth: 'google'  // This will use application default credentials
       });
       
       await this.doc.loadInfo();
