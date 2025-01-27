@@ -81,5 +81,6 @@ class SheetsService {
       // Don't throw error to prevent process interruption
     }
   }
+}
 
 module.exports = new SheetsService();
