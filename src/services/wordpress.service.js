@@ -1,4 +1,4 @@
-const apiFetch = require('@wordpress/api-fetch');
+const fetch = require('@wordpress/api-fetch').default;
 const { getSecret } = require('../utils/secrets');
 const { secretNames } = require('../config');
 const contentStorage = require('../utils/storage');
@@ -17,14 +17,10 @@ class WordPressService {
         getSecret(secretNames.wpPassword)
       ]);
 
-      // Configure apiFetch defaults
-      apiFetch.defaults = {
-        baseURL,
-        headers: {
-          'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
-          'Content-Type': 'application/json'
-        }
-      };
+      // Configure api-fetch with root URL and auth
+      fetch.use(fetch.createRootURLMiddleware(baseURL));
+      fetch.use(fetch.createNonceMiddleware(''));
+      fetch.use(fetch.createBasicAuthMiddleware(username, password));
 
       this.isInitialized = true;
       await contentStorage.initialize();
@@ -42,8 +38,8 @@ class WordPressService {
 
     try {
       console.log(`[WORDPRESS] Fetching post ${postId}`);
-      const post = await apiFetch({
-        url: `/wp/v2/posts/${postId}`,
+      const post = await fetch({
+        path: `/wp/v2/posts/${postId}`,
         method: 'GET'
       });
 
@@ -72,8 +68,8 @@ class WordPressService {
     }
 
     try {
-      const response = await apiFetch({
-        url: `/wp/v2/posts/${postId}`,
+      const response = await fetch({
+        path: `/wp/v2/posts/${postId}`,
         method: 'POST',
         data
       });
