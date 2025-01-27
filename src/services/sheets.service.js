@@ -1,4 +1,5 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { GoogleAuth } = require('google-auth-library');
 const { getSecret } = require('../utils/secrets');
 const { secretNames } = require('../config');
 const { findSheetByTitle } = require('../utils/sheets');
@@ -12,9 +13,21 @@ class SheetsService {
   async initialize() {
     try {
       const spreadsheetId = await getSecret(secretNames.sheetsId);
-      // Use application default credentials which are automatically available in Cloud Run
+      
+      // Create a new GoogleAuth instance
+      const auth = new GoogleAuth({
+        scopes: [
+          'https://www.googleapis.com/auth/spreadsheets',
+          'https://www.googleapis.com/auth/drive.file'
+        ]
+      });
+      
+      // Get the client
+      const client = await auth.getClient();
+      
+      // Initialize the spreadsheet with the authenticated client
       this.doc = new GoogleSpreadsheet(spreadsheetId, {
-        auth: 'google'  // This will use application default credentials
+        auth: client
       });
       
       await this.doc.loadInfo();
