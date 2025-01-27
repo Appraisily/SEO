@@ -36,11 +36,17 @@ The application is built with three core services:
 ## Configuration
 
 ### Environment Variables
-- `PORT`: Server port (default: 8080)
-- `PROJECT_ID`: Google Cloud project ID
+The following runtime environment variables must be configured in Cloud Run:
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `PROJECT_ID` | Google Cloud project ID | Yes | - |
+| `PORT` | Server port | No | 8080 |
+
+> **IMPORTANT**: `PROJECT_ID` must be set as a runtime environment variable in Cloud Run, not as a secret. This is required for accessing Secret Manager and other Google Cloud services.
 
 ### Required Secrets
-All secrets are managed through Google Secret Manager:
+The following secrets must be configured in Google Secret Manager within your project:
 
 - `WORDPRESS_API_URL`: WordPress REST API endpoint
 - `wp_username`: WordPress username
