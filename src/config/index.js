@@ -7,6 +7,7 @@ module.exports = {
     openAiKey: 'OPEN_AI_API_SEO',
     wpApiUrl: 'WORDPRESS_API_URL',
     wpUsername: 'wp_username',
-    wpPassword: 'wp_app_password'
+    wpPassword: 'wp_app_password',
+    serviceAccountJson: 'service-account-json'
   }
 };
