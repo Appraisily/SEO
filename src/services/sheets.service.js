@@ -12,16 +12,10 @@ class SheetsService {
   async initialize() {
     try {
       const spreadsheetId = await getSecret(secretNames.sheetsId);
+      this.doc = new GoogleSpreadsheet(spreadsheetId);
 
       // Use application default credentials
-      this.doc = new GoogleSpreadsheet(spreadsheetId);
-      await this.doc.useServiceAccountAuth({
-        credentials: {
-          client_email: '856401495068-compute@developer.gserviceaccount.com',
-          private_key: null // Will use ADC from environment
-        }
-      });
-      
+      await this.doc.useEnvAuth();
       await this.doc.loadInfo();
       
       // Find the KWs sheet
