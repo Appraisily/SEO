@@ -10,6 +10,7 @@
     "google-spreadsheet": "^4.1.1",
     "@google-cloud/secret-manager": "^5.0.1",
     "@wordpress/api-fetch": "^6.45.0",
-    "openai": "^3.3.0"
+    "openai": "^3.3.0",
+    "@google-cloud/storage": "^7.7.0"
   }
 }
