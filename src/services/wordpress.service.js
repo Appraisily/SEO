@@ -18,12 +18,9 @@ class WordPressService {
         getSecret(secretNames.wpPassword)
       ]);
 
-      // Remove /wp/v2 from baseURL since it's already included
-      const cleanBaseURL = baseURL.replace('/wp/v2', '');
-
       // Create axios instance with auth and proper base URL
       this.client = axios.create({
-        baseURL: cleanBaseURL,
+        baseURL,
         headers: {
           'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
           'Content-Type': 'application/json'
