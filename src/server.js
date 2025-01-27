@@ -19,12 +19,16 @@ async function initializeService(service, name) {
 async function initialize() {
   console.log('[SERVER] Starting initialization...');
   
-  // Initialize each service independently
-  const sheetsInitialized = await initializeService(sheetsService, 'Google Sheets');
-  const wordpressInitialized = await initializeService(wordpressService, 'WordPress');
-  const openaiInitialized = await initializeService(openaiService, 'OpenAI');
-  const storageInitialized = await initializeService(contentStorage, 'Storage');
+  // Initialize services in parallel for better performance
+  const [sheetsInitialized, wordpressInitialized, openaiInitialized, storageInitialized] = 
+    await Promise.all([
+      initializeService(sheetsService, 'Google Sheets'),
+      initializeService(wordpressService, 'WordPress'),
+      initializeService(openaiService, 'OpenAI'),
+      initializeService(contentStorage, 'Storage')
+    ]);
   
+  // Start the server regardless of service initialization status
   app.listen(port, () => {
     console.log(`[SERVER] Running on port ${port}`);
     console.log('[SERVER] Service Status:');
@@ -37,6 +41,18 @@ async function initialize() {
       console.warn('[SERVER] Warning: Some services failed to initialize');
     }
   });
+
+  // Return initialization status
+  return {
+    sheetsInitialized,
+    wordpressInitialized,
+    openaiInitialized,
+    storageInitialized
+  };
 }
 
-initialize();
+// Handle initialization errors gracefully
+initialize().catch(error => {
+  console.error('[SERVER] Critical initialization error:', error);
+  process.exit(1);
+});

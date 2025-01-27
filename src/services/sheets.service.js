@@ -61,15 +61,15 @@ class SheetsService {
       }
 
       console.log('[SHEETS] Testing with row 9:', {
-        postId: testRow[0], // Post ID
-        keyword: testRow[1], // KWs
-        seoTitle: testRow[2] // SEO Title
+        keyword: testRow[0], // Column A: KWs
+        seoTitle: testRow[1], // Column B: SEO Title
+        postId: testRow[2] // Column C: Post ID
       });
 
       return [{
-        postId: testRow[0].trim(),
-        keyword: testRow[1].trim(),
-        seoTitle: testRow[2]?.trim() || ''
+        keyword: testRow[0].trim(),
+        seoTitle: testRow[1]?.trim() || '',
+        postId: testRow[2].trim()
       }];
     } catch (error) {
       console.error('[SHEETS] Error getting posts to process:', error);

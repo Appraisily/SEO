@@ -1,4 +1,4 @@
-const fetch = require('@wordpress/api-fetch').default;
+const axios = require('axios');
 const { getSecret } = require('../utils/secrets');
 const { secretNames } = require('../config');
 const contentStorage = require('../utils/storage');
@@ -6,6 +6,7 @@ const contentStorage = require('../utils/storage');
 class WordPressService {
   constructor() {
     this.isInitialized = false;
+    this.client = null;
   }
 
   async initialize() {
@@ -17,10 +18,17 @@ class WordPressService {
         getSecret(secretNames.wpPassword)
       ]);
 
-      // Configure api-fetch with root URL and auth
-      fetch.use(fetch.createRootURLMiddleware(baseURL));
-      fetch.use(fetch.createNonceMiddleware(''));
-      fetch.use(fetch.createBasicAuthMiddleware(username, password));
+      // Remove /wp/v2 from baseURL since it's already included
+      const cleanBaseURL = baseURL.replace('/wp/v2', '');
+
+      // Create axios instance with auth and proper base URL
+      this.client = axios.create({
+        baseURL: cleanBaseURL,
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
+          'Content-Type': 'application/json'
+        }
+      });
 
       this.isInitialized = true;
       await contentStorage.initialize();
@@ -38,10 +46,7 @@ class WordPressService {
 
     try {
       console.log(`[WORDPRESS] Fetching post ${postId}`);
-      const post = await fetch({
-        path: `/wp/v2/posts/${postId}`,
-        method: 'GET'
-      });
+      const { data: post } = await this.client.get(`/posts/${postId}`);
 
       const content = {
         id: post.id,
@@ -68,11 +73,7 @@ class WordPressService {
     }
 
     try {
-      const response = await fetch({
-        path: `/wp/v2/posts/${postId}`,
-        method: 'POST',
-        data
-      });
+      const { data: response } = await this.client.post(`/posts/${postId}`, data);
 
       return {
         success: true,
