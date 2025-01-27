@@ -1,5 +1,4 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { GoogleAuth } = require('google-auth-library');
 const { getSecret } = require('../utils/secrets');
 const { secretNames } = require('../config');
 const { findSheetByTitle } = require('../utils/sheets');
@@ -13,21 +12,14 @@ class SheetsService {
   async initialize() {
     try {
       const spreadsheetId = await getSecret(secretNames.sheetsId);
-      
-      // Create a new GoogleAuth instance
-      const auth = new GoogleAuth({
-        scopes: [
-          'https://www.googleapis.com/auth/spreadsheets',
-          'https://www.googleapis.com/auth/drive.file'
-        ]
-      });
-      
-      // Get the client
-      const client = await auth.getClient();
-      
-      // Initialize the spreadsheet with the authenticated client
-      this.doc = new GoogleSpreadsheet(spreadsheetId, {
-        auth: client
+
+      // Use application default credentials
+      this.doc = new GoogleSpreadsheet(spreadsheetId);
+      await this.doc.useServiceAccountAuth({
+        credentials: {
+          client_email: '856401495068-compute@developer.gserviceaccount.com',
+          private_key: null // Will use ADC from environment
+        }
       });
       
       await this.doc.loadInfo();
