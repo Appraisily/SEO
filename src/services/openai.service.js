@@ -58,6 +58,9 @@ class OpenAIService {
       
       return enhancedContent;
     } catch (error) {
+      // Log the full error response from OpenAI
+      console.error(`[OPENAI] Full error response:`, error.response?.data);
+      
       // Check for specific OpenAI errors
       if (error.response?.data?.error?.code === 'context_length_exceeded') {
         console.error(`[OPENAI] Context length exceeded (${version}):`, error.response.data.error);
