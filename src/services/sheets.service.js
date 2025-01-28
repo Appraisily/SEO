@@ -50,7 +50,7 @@ class SheetsService {
       // Get all rows from the KWs sheet
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.sheetsId,
-        range: 'KWs!A:D', // Columns: KWs, SEO Title, Post ID, Processed Date
+        range: 'KWs!A:E', // Columns: KWs, SEO Title, Post ID, Processed Date, Status
       });
 
       const rows = response.data.values || [];
@@ -81,7 +81,7 @@ class SheetsService {
     }
   }
 
-  async markPostAsProcessed(post) {
+  async markPostAsProcessed(post, status = 'success', error = null) {
     if (!this.isConnected) {
       throw new Error('Google Sheets connection not initialized');
     }
@@ -92,17 +92,27 @@ class SheetsService {
         throw new Error('Row number not provided for post update');
       }
 
-      // Update the Processed column (column D) for the specific row
-      await this.sheets.spreadsheets.values.update({
+      // Prepare values for both processed date (D) and status (E) columns
+      const processedDate = new Date().toISOString();
+      const statusMessage = status === 'success' 
+        ? 'Success'
+        : `Error: ${error?.message || error || 'Unknown error'}`;
+
+      // Update both columns in a single request
+      await this.sheets.spreadsheets.values.batchUpdate({
         spreadsheetId: this.sheetsId,
-        range: `KWs!D${rowNumber}`,
-        valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [[new Date().toISOString()]]
+          valueInputOption: 'USER_ENTERED',
+          data: [
+            {
+              range: `KWs!D${rowNumber}:E${rowNumber}`,
+              values: [[processedDate, statusMessage]]
+            }
+          ]
         }
       });
       
-      console.log(`[SHEETS] Marked row ${rowNumber} as processed`);
+      console.log(`[SHEETS] Marked row ${rowNumber} as processed with status: ${status}`);
     } catch (error) {
       console.error(`[SHEETS] Error marking row as processed:`, error);
       throw error;

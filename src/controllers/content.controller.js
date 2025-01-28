@@ -23,12 +23,10 @@ class ContentController {
       console.log(`[CONTENT] Processing post ${post.postId} with keyword "${post.keyword}"`);
       
       try {
-        // Mark as processed immediately to prevent reprocessing on failure
-        await sheetsService.markPostAsProcessed(post);
-        
         // 1. Get WordPress content
         const wpContent = await wordpressService.getPost(post.postId);
         if (!wpContent) {
+          await sheetsService.markPostAsProcessed(post, 'error', 'Failed to fetch WordPress content');
           throw new Error('Failed to fetch WordPress content');
         }
 
@@ -43,6 +41,9 @@ class ContentController {
         };
 
         await wordpressService.updatePost(post.postId, updateData);
+        
+        // Mark as successfully processed
+        await sheetsService.markPostAsProcessed(post, 'success');
         
         return res.json({
           success: true,
@@ -60,6 +61,10 @@ class ContentController {
 
       } catch (error) {
         console.error(`[CONTENT] Error processing post ${post.postId}:`, error);
+        
+        // Mark as processed with error
+        await sheetsService.markPostAsProcessed(post, 'error', error.message);
+        
         return res.json({
           success: false,
           summary: {

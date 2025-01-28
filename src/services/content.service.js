@@ -61,13 +61,15 @@ class ContentService {
 
       let v3Data;
       try {
-        // Clean the response by removing any backticks and code block markers
+        // Clean the response to handle various formats
         const cleanedResponse = v3Response
-          .replace(/```json\n?/g, '')  // Remove JSON code block start
-          .replace(/```\n?/g, '')      // Remove code block end
-          .trim();                     // Remove any extra whitespace
+          .replace(/```json\s*/g, '')  // Remove JSON code block start with any whitespace
+          .replace(/```\s*/g, '')      // Remove any other code block markers
+          .replace(/^[\s\n]+|[\s\n]+$/g, ''); // Trim whitespace and newlines
 
-        console.log('[CONTENT] Cleaned v3 response:', cleanedResponse);
+        // Log the cleaned response for debugging
+        console.log('[CONTENT] Attempting to parse cleaned v3 response:', cleanedResponse);
+        
         v3Data = JSON.parse(cleanedResponse);
         console.log('[CONTENT] Successfully parsed v3 response');
       } catch (error) {
@@ -76,10 +78,15 @@ class ContentService {
         throw new Error('Invalid v3 response format');
       }
 
-      // Validate v3 data structure
-      if (!v3Data.content || !v3Data.meta_title || !v3Data.meta_description) {
-        console.error('[CONTENT] Invalid v3 data structure:', v3Data);
-        throw new Error('Invalid v3 data structure - missing required fields');
+      // Validate required fields
+      if (!v3Data.content || typeof v3Data.content !== 'string') {
+        throw new Error('Invalid v3 data: missing or invalid content field');
+      }
+      if (!v3Data.meta_title || typeof v3Data.meta_title !== 'string') {
+        throw new Error('Invalid v3 data: missing or invalid meta_title field');
+      }
+      if (!v3Data.meta_description || typeof v3Data.meta_description !== 'string') {
+        throw new Error('Invalid v3 data: missing or invalid meta_description field');
       }
 
       // Create v3 enhanced post
@@ -161,32 +168,37 @@ Return only the enhanced content with all HTML formatting preserved.`;
   createV3Prompt(v2Content) {
     return `You are a content editor. Your task is to enhance the following content with SEO optimizations and meta information.
 
+CRITICAL: You must return ONLY a valid JSON object with exactly these three fields:
+- meta_title: SEO title (string)
+- meta_description: Meta description (string)
+- content: Enhanced HTML content (string)
+
+Example of EXACT format required:
+{
+  "meta_title": "Example Title | Brand",
+  "meta_description": "Example description text here",
+  "content": "<div>Example HTML content</div>"
+}
+
 Key Requirements:
 1. Meta Information:
-   - Meta Title: "Antique Glass Decanter Identification | Free Appraisal Tool"
-   - Meta Description: "Identify & value antique glass decanters instantly. Learn how to date, spot makers' marks, & try our free art & antique screener for a quick valuation!"
+   - Meta Title: Include primary keyword and value proposition
+   - Meta Description: Compelling summary with call-to-action
 
-2. Image Alt Text Optimization:
-   - Update alt attributes to include relevant keywords
-   - Focus on "antique glass decanter identification," "online antique evaluation tool"
-   - Make descriptions natural and informative
-
-3. SEO-Friendly Headings:
-   - Add appropriate h2/h3 tags
-   - Include keywords naturally
-   - Maintain content flow
+2. Content Optimization:
+   - Maintain all HTML formatting
+   - Preserve existing structure
+   - Ensure content flows naturally
 
 Original Content:
 ${v2Content}
 
-Return your response as a JSON object with exactly three keys:
-{
-  "meta_title": "Antique Glass Decanter Identification | Free Appraisal Tool",
-  "meta_description": "Identify & value antique glass decanters instantly. Learn how to date, spot makers' marks, & try our free art & antique screener for a quick valuation!",
-  "content": "<!-- Your enhanced HTML content here -->"
-}
-
-IMPORTANT: Return ONLY the JSON object, no markdown or code block formatting.`;
+IMPORTANT: 
+- Return ONLY the JSON object
+- NO markdown formatting
+- NO code blocks
+- NO additional text
+- Must be valid JSON`;
   }
 
   stripHtmlTags(html) {
