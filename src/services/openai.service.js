@@ -20,16 +20,19 @@ class OpenAIService {
     }
   }
 
-  async enhanceContent(prompt, keyword) {
+  async enhanceContent(prompt, keyword, version = 'v1') {
     if (!this.isInitialized) {
       throw new Error('OpenAI service not initialized');
     }
 
     try {
-      console.log('[OPENAI] Sending request to enhance content with keyword:', keyword);
+      console.log(`[OPENAI] Sending request to enhance content (${version}) with keyword:`, keyword);
+      
+      // Use o1-mini for v3, gpt-4o for others
+      const model = version === 'v3' ? 'o1-mini' : 'gpt-4o';
       
       const completion = await this.openai.createChatCompletion({
-        model: "gpt-4o", //ensure you use gpt-4o, it is newer more advanced model than gpt-4, it is not an error
+        model,
         messages: [
           {
             role: "system",
@@ -41,15 +44,29 @@ class OpenAIService {
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000
+        // Only set max_tokens for v1 and v2
+        ...(version !== 'v3' && { max_tokens: 4000 })
       });
-  
+
       const enhancedContent = completion.data.choices[0].message.content;
-      console.log('[OPENAI] Successfully received enhanced content');
+      
+      // Check for truncation
+      if (completion.data.choices[0].finish_reason === 'length') {
+        console.error(`[OPENAI] Response was truncated (${version})`);
+        throw new Error(`Response truncated - content too long (${version})`);
+      }
+
+      console.log(`[OPENAI] Successfully received enhanced content (${version})`);
       
       return enhancedContent;
     } catch (error) {
-      console.error('[OPENAI] Error enhancing content:', error);
+      // Check for specific OpenAI errors
+      if (error.response?.data?.error?.code === 'context_length_exceeded') {
+        console.error(`[OPENAI] Context length exceeded (${version}):`, error.response.data.error);
+        throw new Error(`Content too long for processing (${version})`);
+      }
+      
+      console.error(`[OPENAI] Error enhancing content (${version}):`, error);
       throw error;
     }
   }

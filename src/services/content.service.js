@@ -13,7 +13,7 @@ class ContentService {
       // First enhancement (v1)
       console.log('[CONTENT] Starting first enhancement (v1)');
       const v1Prompt = this.createV1Prompt(post.content, keyword);
-      const v1Content = await openaiService.enhanceContent(v1Prompt, keyword);
+      const v1Content = await openaiService.enhanceContent(v1Prompt, keyword, 'v1');
       
       if (!v1Content) {
         throw new Error('Failed to create v1 enhancement');
@@ -33,7 +33,7 @@ class ContentService {
       // Second enhancement (v2)
       console.log('[CONTENT] Starting second enhancement (v2)');
       const v2Prompt = this.createV2Prompt(v1Content);
-      const v2Content = await openaiService.enhanceContent(v2Prompt, keyword);
+      const v2Content = await openaiService.enhanceContent(v2Prompt, keyword, 'v2');
 
       if (!v2Content) {
         throw new Error('Failed to create v2 enhancement');
@@ -50,10 +50,10 @@ class ContentService {
       console.log('[CONTENT] Storing v2 enhanced content');
       await contentStorage.storeContent(post.id, v2Post, 'enhanced-v2');
 
-      // Third enhancement (v3)
+      // Third enhancement (v3) using o1-mini model
       console.log('[CONTENT] Starting third enhancement (v3)');
       const v3Prompt = this.createV3Prompt(v2Content);
-      const v3Response = await openaiService.enhanceContent(v3Prompt, keyword);
+      const v3Response = await openaiService.enhanceContent(v3Prompt, keyword, 'v3');
 
       if (!v3Response) {
         throw new Error('Failed to create v3 enhancement');
