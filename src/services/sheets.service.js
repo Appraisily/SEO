@@ -41,62 +41,71 @@ class SheetsService {
     }
   }
 
-  async getPostsToProcess() {
+  async getNextUnprocessedPost() {
     if (!this.isConnected) {
       throw new Error('Google Sheets connection not initialized');
     }
     
     try {
-      // Get values from the KWs sheet
+      // Get all rows from the KWs sheet
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.sheetsId,
-        range: 'KWs!A:D', // Assuming columns are: Post ID, KWs, SEO Title, Processed
+        range: 'KWs!A:D', // Columns: KWs, SEO Title, Post ID, Processed Date
       });
 
       const rows = response.data.values || [];
-      // Get row 9 for testing (array is 0-based, so index 8)
-      const testRow = rows[8];
-      if (!testRow) {
-        throw new Error('Test row (row 9) not found');
+      if (rows.length <= 1) { // Only headers or empty
+        console.log('[SHEETS] No posts found in sheet');
+        return null;
       }
 
-      console.log('[SHEETS] Testing with row 9:', {
-        keyword: testRow[0], // Column A: KWs
-        seoTitle: testRow[1], // Column B: SEO Title
-        postId: testRow[2] // Column C: Post ID
-      });
+      // Skip header row and find first unprocessed row
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row[3]) { // Column D (index 3) is empty - not processed
+          console.log('[SHEETS] Found unprocessed post in row:', i + 1);
+          return {
+            keyword: row[0]?.trim() || '',
+            seoTitle: row[1]?.trim() || '',
+            postId: row[2]?.trim() || '',
+            rowNumber: i + 1 // Actual spreadsheet row number (1-based)
+          };
+        }
+      }
 
-      return [{
-        keyword: testRow[0].trim(),
-        seoTitle: testRow[1]?.trim() || '',
-        postId: testRow[2].trim()
-      }];
+      console.log('[SHEETS] No unprocessed posts found');
+      return null;
     } catch (error) {
-      console.error('[SHEETS] Error getting posts to process:', error);
+      console.error('[SHEETS] Error getting next unprocessed post:', error);
       throw error;
     }
   }
 
-  async markPostAsProcessed(rowIndex) {
+  async markPostAsProcessed(post) {
     if (!this.isConnected) {
       throw new Error('Google Sheets connection not initialized');
     }
     
     try {
-      // Update the Processed column (assumed to be column D)
+      const rowNumber = post.rowNumber;
+      if (!rowNumber) {
+        throw new Error('Row number not provided for post update');
+      }
+
+      // Update the Processed column (column D) for the specific row
       await this.sheets.spreadsheets.values.update({
         spreadsheetId: this.sheetsId,
-        range: `KWs!D${rowIndex + 1}`,
+        range: `KWs!D${rowNumber}`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [[new Date().toISOString()]]
         }
       });
       
-      console.log(`[SHEETS] Marked row ${rowIndex + 1} as processed`);
+      console.log(`[SHEETS] Marked row ${rowNumber} as processed`);
     } catch (error) {
-      console.error(`[SHEETS] Error marking row ${rowIndex + 1} as processed:`, error);
-      // Don't throw error to prevent process interruption
+      console.error(`[SHEETS] Error marking row as processed:`, error);
+      throw error;
     }
   }
 }
