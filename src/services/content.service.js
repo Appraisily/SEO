@@ -59,6 +59,14 @@ class ContentService {
         throw new Error('Failed to create v3 enhancement');
       }
 
+      // Store raw v3 response before parsing
+      console.log('[CONTENT] Storing raw v3 response');
+      await contentStorage.storeContent(post.id, {
+        raw_response: v3Response,
+        timestamp: new Date().toISOString(),
+        keyword
+      }, 'raw-v3-response');
+
       let v3Data;
       try {
         // Clean the response to handle various formats
