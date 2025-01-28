@@ -14,7 +14,17 @@ router.post('/debug/v3-enhance', async (req, res) => {
       return res.status(400).json({ error: 'Content is required' });
     }
 
-    const prompt = `You are a content editor. Your task is to enhance the following content with SEO optimizations and meta information.
+    // Create a custom completion for debugging
+    const completion = await openaiService.openai.createChatCompletion({
+      model: 'o1-mini',
+      messages: [
+        {
+          role: "developer",
+          content: "You are an expert content enhancer specializing in antiques and art valuation. Your task is to enhance WordPress content while maintaining HTML structure and adding compelling CTAs. Return only the enhanced content with HTML formatting."
+        },
+        {
+          role: "user",
+          content: `You are a content editor. Your task is to enhance the following content with SEO optimizations and meta information.
 
 CRITICAL: You must return ONLY a valid JSON object with exactly these three fields:
 - meta_title: SEO title (string)
@@ -46,9 +56,13 @@ IMPORTANT:
 - NO markdown formatting
 - NO code blocks
 - NO additional text
-- Must be valid JSON`;
+- Must be valid JSON`
+        }
+      ],
+      temperature: 0.7
+    });
 
-    const enhancedContent = await openaiService.enhanceContent(prompt, 'antique marbles', 'v3');
+    const enhancedContent = completion.data.choices[0].message.content;
     res.json({ success: true, result: enhancedContent });
   } catch (error) {
     console.error('Debug endpoint error:', error);
