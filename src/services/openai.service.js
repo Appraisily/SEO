@@ -31,11 +31,14 @@ class OpenAIService {
       // Use o1-mini for v3, gpt-4o for others
       const model = version === 'v3' ? 'o1-mini' : 'gpt-4o';
       
+      // Use 'developer' role for o1-mini, 'system' for others
+      const instructionRole = model === 'o1-mini' ? 'developer' : 'system';
+      
       const completion = await this.openai.createChatCompletion({
         model,
         messages: [
           {
-            role: "system",
+            role: instructionRole,
             content: "You are an expert content enhancer specializing in antiques and art valuation. Your task is to enhance WordPress content while maintaining HTML structure and adding compelling CTAs. Return only the enhanced content with HTML formatting."
           },
           {
