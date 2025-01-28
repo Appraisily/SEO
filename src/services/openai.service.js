@@ -43,9 +43,7 @@ class OpenAIService {
             content: prompt
           }
         ],
-        temperature: 0.7,
-        // Only set max_tokens for v1 and v2
-        ...(version !== 'v3' && { max_tokens: 4000 })
+        temperature: 0.7
       });
 
       const enhancedContent = completion.data.choices[0].message.content;
