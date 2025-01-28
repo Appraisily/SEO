@@ -20,20 +20,38 @@ class OpenAIService {
     }
   }
 
-  async enhanceContent(content, keyword) {
+  async enhanceContent(prompt, keyword) {
     if (!this.isInitialized) {
       throw new Error('OpenAI service not initialized');
     }
 
     try {
-      const completion = await this.openai.createCompletion({
-        model: "text-davinci-003",
-        prompt: `Enhance the following content for SEO using the keyword "${keyword}":\n\n${content}`,
-        max_tokens: 2000,
+      const completion = await this.openai.createChatCompletion({
+        model: "gpt-4o", //ensure you use gpt-4o, it is newer more advanced model than gpt-4, it is not an error
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert content enhancer specializing in antiques and art valuation. Your task is to enhance WordPress content while maintaining HTML structure and adding compelling CTAs."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
         temperature: 0.7,
+        max_tokens: 4000
       });
   
-      return completion.data.choices[0].text.trim();
+      const enhancedContent = completion.data.choices[0].message.content;
+      
+      try {
+        // Attempt to parse the response as JSON
+        const parsedContent = JSON.parse(enhancedContent);
+        return parsedContent.content || enhancedContent;
+      } catch (e) {
+        // If parsing fails, return the raw content
+        return enhancedContent;
+      }
     } catch (error) {
       console.error('[OPENAI] Error enhancing content:', error);
       return null;
