@@ -61,11 +61,25 @@ class ContentService {
 
       let v3Data;
       try {
-        v3Data = JSON.parse(v3Response);
+        // Clean the response by removing any backticks and code block markers
+        const cleanedResponse = v3Response
+          .replace(/```json\n?/g, '')  // Remove JSON code block start
+          .replace(/```\n?/g, '')      // Remove code block end
+          .trim();                     // Remove any extra whitespace
+
+        console.log('[CONTENT] Cleaned v3 response:', cleanedResponse);
+        v3Data = JSON.parse(cleanedResponse);
         console.log('[CONTENT] Successfully parsed v3 response');
       } catch (error) {
         console.error('[CONTENT] Failed to parse v3 response:', error);
+        console.error('[CONTENT] Raw v3 response:', v3Response);
         throw new Error('Invalid v3 response format');
+      }
+
+      // Validate v3 data structure
+      if (!v3Data.content || !v3Data.meta_title || !v3Data.meta_description) {
+        console.error('[CONTENT] Invalid v3 data structure:', v3Data);
+        throw new Error('Invalid v3 data structure - missing required fields');
       }
 
       // Create v3 enhanced post
@@ -170,7 +184,9 @@ Return your response as a JSON object with exactly three keys:
   "meta_title": "Antique Glass Decanter Identification | Free Appraisal Tool",
   "meta_description": "Identify & value antique glass decanters instantly. Learn how to date, spot makers' marks, & try our free art & antique screener for a quick valuation!",
   "content": "<!-- Your enhanced HTML content here -->"
-}`;
+}
+
+IMPORTANT: Return ONLY the JSON object, no markdown or code block formatting.`;
   }
 
   stripHtmlTags(html) {

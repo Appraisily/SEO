@@ -51,7 +51,11 @@ class WordPressService {
         content: post.content.rendered,
         excerpt: post.excerpt.rendered,
         modified: post.modified,
-        status: post.status
+        status: post.status,
+        meta: {
+          _yoast_wpseo_title: post.meta?._yoast_wpseo_title || '',
+          _yoast_wpseo_metadesc: post.meta?._yoast_wpseo_metadesc || ''
+        }
       };
 
       // Store the original content
@@ -70,15 +74,48 @@ class WordPressService {
     }
 
     try {
-      const { data: response } = await this.client.post(`/posts/${postId}`, data);
+      console.log(`[WORDPRESS] Updating post ${postId}`);
+      console.log('[WORDPRESS] Update data:', {
+        contentLength: data.content?.length,
+        hasMetaTitle: !!data.meta_title,
+        hasMetaDesc: !!data.meta_description
+      });
 
+      // Prepare the update payload
+      const updateData = {
+        content: data.content,
+        meta: {
+          _yoast_wpseo_title: data.meta_title || '',
+          _yoast_wpseo_metadesc: data.meta_description || ''
+        }
+      };
+
+      // Store pre-update state
+      const preUpdateContent = await this.getPost(postId);
+      await contentStorage.storeContent(postId, preUpdateContent, 'pre-update');
+
+      // Perform the update
+      const { data: response } = await this.client.post(`/posts/${postId}`, updateData);
+
+      // Store post-update state
+      const postUpdateContent = {
+        ...response,
+        meta: {
+          _yoast_wpseo_title: data.meta_title || '',
+          _yoast_wpseo_metadesc: data.meta_description || ''
+        }
+      };
+      await contentStorage.storeContent(postId, postUpdateContent, 'post-update');
+
+      console.log(`[WORDPRESS] Successfully updated post ${postId}`);
       return {
         success: true,
-        postId: response.id
+        postId: response.id,
+        modified: response.modified
       };
     } catch (error) {
       console.error(`[WORDPRESS] Failed to update post ${postId}:`, error);
-      throw new Error(`Failed to update post ${postId}`);
+      throw new Error(`Failed to update post ${postId}: ${error.message}`);
     }
   }
 }

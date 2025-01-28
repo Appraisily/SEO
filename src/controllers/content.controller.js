@@ -20,19 +20,26 @@ class ContentController {
             continue;
           }
 
-          // 2. Enhance content
+          // 2. Enhance content through v1, v2, and v3
           const enhancedPost = await contentService.enhanceContent(wpContent, post.keyword);
           
-          // 3. Update WordPress post
-          await wordpressService.updatePost(post.postId, {
-            content: enhancedPost.content
-          });
+          // 3. Update WordPress post with enhanced content and meta
+          const updateData = {
+            content: enhancedPost.content,
+            meta_title: enhancedPost.meta_title,
+            meta_description: enhancedPost.meta_description
+          };
+
+          await wordpressService.updatePost(post.postId, updateData);
           
           processed.push({
             postId: post.postId,
             status: 'success',
             enhancedAt: enhancedPost.enhanced_at
           });
+
+          // 4. Mark as processed in Google Sheets
+          await sheetsService.markPostAsProcessed(posts.indexOf(post));
 
           console.log(`[CONTENT] Successfully processed post ${post.postId}`);
         } catch (error) {
