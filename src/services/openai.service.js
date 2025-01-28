@@ -26,12 +26,14 @@ class OpenAIService {
     }
 
     try {
+      console.log('[OPENAI] Sending request to enhance content with keyword:', keyword);
+      
       const completion = await this.openai.createChatCompletion({
         model: "gpt-4o", //ensure you use gpt-4o, it is newer more advanced model than gpt-4, it is not an error
         messages: [
           {
             role: "system",
-            content: "You are an expert content enhancer specializing in antiques and art valuation. Your task is to enhance WordPress content while maintaining HTML structure and adding compelling CTAs."
+            content: "You are an expert content enhancer specializing in antiques and art valuation. Your task is to enhance WordPress content while maintaining HTML structure and adding compelling CTAs. Return only the enhanced content with HTML formatting."
           },
           {
             role: "user",
@@ -43,18 +45,12 @@ class OpenAIService {
       });
   
       const enhancedContent = completion.data.choices[0].message.content;
+      console.log('[OPENAI] Successfully received enhanced content');
       
-      try {
-        // Attempt to parse the response as JSON
-        const parsedContent = JSON.parse(enhancedContent);
-        return parsedContent.content || enhancedContent;
-      } catch (e) {
-        // If parsing fails, return the raw content
-        return enhancedContent;
-      }
+      return enhancedContent;
     } catch (error) {
       console.error('[OPENAI] Error enhancing content:', error);
-      return null;
+      throw error;
     }
   }
 }

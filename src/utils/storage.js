@@ -34,7 +34,7 @@ class ContentStorage {
     });
 
     const timestamp = Date.now();
-    const version = type === 'enhanced' ? 'v1' : '';
+    const version = type.includes('enhanced') ? `-${type.split('-')[1] || 'v1'}` : '';
     const fileName = `seo_content/${postId}/${type}${version}-${timestamp}.json`;
     console.log('[STORAGE] Generated filename:', fileName);
 
@@ -61,7 +61,7 @@ class ContentStorage {
       
       console.log('[STORAGE] Successfully stored content:', {
         fileName,
-        type: type + version,
+        type,
         postId,
         timestamp: metadata.metadata.timestamp
       });
@@ -78,7 +78,7 @@ class ContentStorage {
     } catch (error) {
       console.error('[STORAGE] Failed to store content:', {
         fileName,
-        type: type + version,
+        type,
         postId,
         error: {
           message: error.message,
