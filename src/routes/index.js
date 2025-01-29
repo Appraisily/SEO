@@ -22,7 +22,7 @@ router.post('/debug/v3-enhance', async (req, res) => {
       model: 'o1-mini',
       messages: [
         {
-          role: "developer",
+          role: "assistant",
           content: "You are an expert content enhancer specializing in antiques and art valuation. Your task is to enhance WordPress content while maintaining HTML structure and adding compelling CTAs. Return only the enhanced content with HTML formatting."
         },
         {
