@@ -61,8 +61,7 @@ IMPORTANT:
 - NO additional text
 - Must be valid JSON`
         }
-      ],
-      temperature: 0.7
+      ]
     });
 
     const enhancedContent = completion.data.choices[0].message.content;
