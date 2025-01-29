@@ -14,6 +14,9 @@ router.post('/debug/v3-enhance', async (req, res) => {
       return res.status(400).json({ error: 'Content is required' });
     }
 
+    console.log('[DEBUG] Starting v3 enhancement with content length:', content.length);
+    console.log('[DEBUG] OpenAI service initialized:', openaiService.isInitialized);
+
     // Create a custom completion for debugging
     const completion = await openaiService.openai.createChatCompletion({
       model: 'o1-mini',
@@ -63,13 +66,26 @@ IMPORTANT:
     });
 
     const enhancedContent = completion.data.choices[0].message.content;
+    console.log('[DEBUG] Successfully received enhanced content');
     res.json({ success: true, result: enhancedContent });
   } catch (error) {
-    console.error('Debug endpoint error:', error);
+    console.error('[DEBUG] Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      error: error.response?.data?.error
+    });
+    
     res.status(500).json({ 
       success: false, 
       error: error.message,
-      details: error.response?.data?.error || null
+      details: {
+        message: error.response?.data?.error?.message,
+        type: error.response?.data?.error?.type,
+        param: error.response?.data?.error?.param,
+        code: error.response?.data?.error?.code
+      }
     });
   }
 });
