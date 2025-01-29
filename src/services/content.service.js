@@ -71,19 +71,28 @@ class ContentService {
       try {
         // Clean the response to handle various formats
         const cleanedResponse = v3Response
-          .replace(/```json\s*/g, '')  // Remove JSON code block start with any whitespace
-          .replace(/```\s*/g, '')      // Remove any other code block markers
-          .replace(/^[\s\n]+|[\s\n]+$/g, ''); // Trim whitespace and newlines
+          .replace(/^```json\s*/gm, '')  // Remove JSON code block markers at start of any line
+          .replace(/```\s*$/gm, '')      // Remove code block markers at end of any line
+          .replace(/^\s+|\s+$/g, '');    // Trim whitespace
 
         // Log the cleaned response for debugging
-        console.log('[CONTENT] Attempting to parse cleaned v3 response:', cleanedResponse);
+        console.log('[CONTENT] Cleaned v3 response:', cleanedResponse);
         
         v3Data = JSON.parse(cleanedResponse);
         console.log('[CONTENT] Successfully parsed v3 response');
       } catch (error) {
         console.error('[CONTENT] Failed to parse v3 response:', error);
         console.error('[CONTENT] Raw v3 response:', v3Response);
-        throw new Error('Invalid v3 response format');
+        
+        // Try parsing with escaped newlines
+        try {
+          const escapedResponse = v3Response.replace(/\n/g, '\\n');
+          v3Data = JSON.parse(escapedResponse);
+          console.log('[CONTENT] Successfully parsed escaped v3 response');
+        } catch (secondError) {
+          console.error('[CONTENT] Failed to parse escaped v3 response:', secondError);
+          throw new Error('Invalid v3 response format');
+        }
       }
 
       // Validate required fields
