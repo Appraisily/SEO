@@ -31,8 +31,8 @@ class OpenAIService {
       // Use o1-mini for v3, gpt-4o for others
       const model = version === 'v3' ? 'o1-mini' : 'gpt-4o';
       
-      // Use 'developer' role for o1-mini, 'system' for others
-      const instructionRole = model === 'o1-mini' ? 'developer' : 'system';
+      // Use 'assistant' role for o1-mini, 'system' for others
+      const instructionRole = model === 'o1-mini' ? 'assistant' : 'system';
       
       const completion = await this.openai.createChatCompletion({
         model,
@@ -45,8 +45,7 @@ class OpenAIService {
             role: "user",
             content: prompt
           }
-        ],
-        temperature: 0.7
+        ]
       });
 
       const enhancedContent = completion.data.choices[0].message.content;
